@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduDigital Rubric Pro - Đánh giá năng lực số</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1e40af', // blue-800
+                        secondary: '#3b82f6', // blue-500
+                        accent: '#f59e0b', // amber-500
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .print-break { page-break-inside: avoid; }
+            body { background: white; color: black; }
+            .print-border { border: 1px solid #e5e7eb; }
+            .print-flex { display: flex !important; }
+            .print-block { display: block !important; }
+        }
+        [v-cloak] { display: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased">
+    <div id="app" v-cloak class="min-h-screen flex flex-col pb-24">
+        
+        <!-- Header -->
+        <header class="bg-primary text-white shadow-md no-print">
+            <div class="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center">
+                <div class="flex items-center gap-3 mb-4 sm:mb-0">
+                    <i class="fa-solid fa-microchip text-3xl text-blue-200"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">EduDigital Rubric Pro</h1>
+                        <p class="text-blue-200 text-sm">Hệ thống Đánh giá Năng lực số theo TT 18/2026/TT-BGDĐT</p>
+                    </div>
+                </div>
+                <div class="flex gap-2 bg-blue-900 p-1 rounded-lg">
+                    <button @click="setRole('GV')" :class="{'bg-white text-primary shadow': role === 'GV', 'text-blue-200 hover:text-white': role !== 'GV'}" class="px-4 py-2 rounded-md font-medium transition-colors">
+                        <i class="fa-solid fa-chalkboard-user mr-2"></i>Giáo viên
+                    </button>
+                    <button @click="setRole('CBQL')" :class="{'bg-white text-primary shadow': role === 'CBQL', 'text-blue-200 hover:text-white': role !== 'CBQL'}" class="px-4 py-2 rounded-md font-medium transition-colors">
+                        <i class="fa-solid fa-user-tie mr-2"></i>Cán bộ quản lý
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+            
+            <!-- User Info Form -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-8 print-border">
+                <h2 class="text-lg font-bold text-slate-700 mb-4 border-b pb-2">
+                    <i class="fa-solid fa-id-card mr-2 text-secondary"></i>Thông tin chung
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- Tên -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Họ và tên {{ role === 'GV' ? 'giáo viên' : 'cán bộ quản lý' }}</label>
+                        <input type="text" v-model="userInfo.name" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none no-print" placeholder="Nhập họ và tên...">
+                        <span class="hidden print-block font-semibold border-b border-dashed border-slate-400 pb-1">{{ userInfo.name || '................................................' }}</span>
+                    </div>
+                    <!-- Trường -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Trường/Cơ sở GD</label>
+                        <input type="text" v-model="userInfo.school" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none no-print" placeholder="Tên trường...">
+                        <span class="hidden print-block font-semibold border-b border-dashed border-slate-400 pb-1">{{ userInfo.school || '................................................' }}</span>
+                    </div>
+                    <!-- Năm học -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Năm học</label>
+                        <input type="text" v-model="userInfo.year" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none no-print" placeholder="VD: 2026-2027">
+                        <span class="hidden print-block font-semibold border-b border-dashed border-slate-400 pb-1">{{ userInfo.year || '................................................' }}</span>
+                    </div>
+                    <!-- Đơn vị / Chức vụ -->
+                    <div v-if="role === 'GV'">
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Đơn vị/Phòng ban</label>
+                        <input type="text" v-model="userInfo.department" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none no-print" placeholder="Tổ chuyên môn...">
+                        <span class="hidden print-block font-semibold border-b border-dashed border-slate-400 pb-1">{{ userInfo.department || '................................................' }}</span>
+                    </div>
+                    <div v-if="role === 'CBQL'">
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Chức vụ</label>
+                        <input type="text" v-model="userInfo.position" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none no-print" placeholder="VD: Hiệu trưởng...">
+                        <span class="hidden print-block font-semibold border-b border-dashed border-slate-400 pb-1">{{ userInfo.position || '................................................' }}</span>
+                    </div>
+                    <!-- Người đánh giá -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Người đánh giá</label>
+                        <input type="text" v-model="userInfo.evaluator" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none no-print" placeholder="Tên người đánh giá...">
+                        <span class="hidden print-block font-semibold border-b border-dashed border-slate-400 pb-1">{{ userInfo.evaluator || '................................................' }}</span>
+                    </div>
+                    <!-- Ngày đánh giá -->
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">Ngày đánh giá</label>
+                        <input type="date" v-model="userInfo.date" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none no-print">
+                        <span class="hidden print-block font-semibold border-b border-dashed border-slate-400 pb-1">{{ userInfo.date || '...... / ...... / 20......' }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="bg-blue-50 text-blue-800 p-4 rounded-lg mb-8 text-sm flex gap-3 no-print border border-blue-100">
+                <i class="fa-solid fa-circle-info text-xl mt-0.5"></i>
+                <div>
+                    <p class="font-bold mb-1">Hướng dẫn đánh giá:</p>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li><strong>Mức Cơ bản (1 điểm):</strong> {{ role === 'GV' ? 'Thực hiện được các nhiệm vụ đơn giản.' : 'Nhận thức được, bước đầu triển khai được các nhiệm vụ quản lý số ở mức cơ bản.' }}</li>
+                        <li><strong>Mức Thành thạo (2 điểm):</strong> {{ role === 'GV' ? 'Áp dụng linh hoạt, hiệu quả.' : 'Chủ động, hiệu quả trong triển khai ứng dụng công nghệ và phối hợp với các bên liên quan.' }}</li>
+                        <li><strong>Mức Nâng cao (3 điểm):</strong> {{ role === 'GV' ? 'Sáng tạo, dẫn dắt, hướng dẫn đồng nghiệp.' : 'Dẫn dắt chiến lược, sáng tạo đổi mới, lan tỏa và xây dựng văn hóa số trong toàn trường.' }}</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Rubric Form -->
+            <div class="space-y-8 mb-8">
+                <div v-for="(domain, dIndex) in currentCriteria" :key="dIndex" class="print-break">
+                    <h3 class="text-xl font-bold text-primary mb-4 border-b-2 border-blue-200 pb-2 flex items-center">
+                        <span class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm shadow">{{ dIndex + 1 }}</span>
+                        {{ domain.name }}
+                    </h3>
+                    
+                    <div class="space-y-6">
+                        <div v-for="(item, iIndex) in domain.items" :key="item.id" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden print-border transition-all hover:shadow-md">
+                            <!-- Question Header -->
+                            <div class="bg-slate-50 px-4 py-3 border-b border-slate-200">
+                                <h4 class="font-semibold text-slate-800 flex items-start text-justify">
+                                    <span class="mr-2 text-secondary whitespace-nowrap">{{ item.id }}.</span> 
+                                    {{ item.name }}
+                                </h4>
+                            </div>
+                            
+                            <div class="p-4 grid grid-cols-1 lg:grid-cols-4 gap-4">
+                                <!-- Scoring Options -->
+                                <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                                    <!-- Basic -->
+                                    <div @click="selectScore(item, 1)" :class="{'ring-2 ring-blue-500 bg-blue-50 border-blue-300': item.score === 1, 'border-slate-200 hover:border-blue-300': item.score !== 1}" class="border rounded-lg p-3 cursor-pointer transition-all relative group no-print">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-xs font-bold px-2 py-1 bg-slate-200 text-slate-600 rounded">Cơ bản (1đ)</span>
+                                            <i v-if="item.score === 1" class="fa-solid fa-circle-check text-blue-500 text-lg"></i>
+                                            <i v-else class="fa-regular fa-circle text-slate-300 text-lg group-hover:text-blue-300"></i>
+                                        </div>
+                                        <p class="text-sm text-slate-600 line-clamp-4 group-hover:line-clamp-none transition-all text-justify">{{ item.desc1 }}</p>
+                                    </div>
+                                    <!-- Proficient -->
+                                    <div @click="selectScore(item, 2)" :class="{'ring-2 ring-green-500 bg-green-50 border-green-300': item.score === 2, 'border-slate-200 hover:border-green-300': item.score !== 2}" class="border rounded-lg p-3 cursor-pointer transition-all relative group no-print">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-xs font-bold px-2 py-1 bg-slate-200 text-slate-600 rounded">Thành thạo (2đ)</span>
+                                            <i v-if="item.score === 2" class="fa-solid fa-circle-check text-green-500 text-lg"></i>
+                                            <i v-else class="fa-regular fa-circle text-slate-300 text-lg group-hover:text-green-300"></i>
+                                        </div>
+                                        <p class="text-sm text-slate-600 line-clamp-4 group-hover:line-clamp-none transition-all text-justify">{{ item.desc2 }}</p>
+                                    </div>
+                                    <!-- Advanced -->
+                                    <div @click="selectScore(item, 3)" :class="{'ring-2 ring-purple-500 bg-purple-50 border-purple-300': item.score === 3, 'border-slate-200 hover:border-purple-300': item.score !== 3}" class="border rounded-lg p-3 cursor-pointer transition-all relative group no-print">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-xs font-bold px-2 py-1 bg-slate-200 text-slate-600 rounded">Nâng cao (3đ)</span>
+                                            <i v-if="item.score === 3" class="fa-solid fa-circle-check text-purple-500 text-lg"></i>
+                                            <i v-else class="fa-regular fa-circle text-slate-300 text-lg group-hover:text-purple-300"></i>
+                                        </div>
+                                        <p class="text-sm text-slate-600 line-clamp-4 group-hover:line-clamp-none transition-all text-justify">{{ item.desc3 }}</p>
+                                    </div>
+
+                                    <!-- Print Only Score Display -->
+                                    <div class="hidden print-block col-span-3 text-sm">
+                                        <strong>{{ role === 'GV' ? 'Điểm đánh giá' : 'Điểm tự đánh giá' }}:</strong> {{ item.score || '___' }} điểm.
+                                        <div class="mt-1 text-slate-600 text-xs text-justify">
+                                            (1đ: {{item.desc1}} | 2đ: {{item.desc2}} | 3đ: {{item.desc3}})
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Evidence Input with Tooltip Suggestions -->
+                                <div class="lg:col-span-1 bg-slate-50 p-3 rounded-lg border border-dashed border-slate-300 flex flex-col justify-start">
+                                    <label class="text-xs font-bold text-slate-500 mb-2 uppercase tracking-wide flex items-center">
+                                        <i class="fa-solid fa-paperclip mr-1"></i> Minh chứng
+                                    </label>
+                                    
+                                    <!-- Gợi ý minh chứng cho CBQL -->
+                                    <div v-if="role === 'CBQL' && item.score && (item.sugg1 || item.sugg2 || item.sugg3)" class="mb-3 p-2 bg-blue-100 rounded text-xs text-blue-800 border border-blue-200 no-print">
+                                        <span class="font-bold block mb-1"><i class="fa-solid fa-lightbulb text-yellow-500 mr-1"></i>Gợi ý minh chứng:</span>
+                                        <span v-if="item.score === 1">{{ item.sugg1 }}</span>
+                                        <span v-else-if="item.score === 2">{{ item.sugg2 }}</span>
+                                        <span v-else-if="item.score === 3">{{ item.sugg3 }}</span>
+                                    </div>
+
+                                    <textarea v-model="item.evidence" rows="3" placeholder="Nhập link (Google Drive, hình ảnh) hoặc mô tả minh chứng..." class="w-full text-sm border border-slate-300 rounded px-2 py-1 focus:ring-1 focus:ring-secondary outline-none resize-none no-print bg-white flex-grow"></textarea>
+                                    <div class="hidden print-block text-sm border-b border-dashed border-slate-400 min-h-[2rem]">
+                                        {{ item.evidence || '(Không có minh chứng)' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Evaluation Form (Nhận xét / Đề xuất) -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 print-border print-break">
+                <h2 class="text-lg font-bold text-slate-700 mb-4 border-b pb-2">
+                    <i class="fa-solid fa-pen-to-square mr-2 text-secondary"></i>Nhận xét & Đánh giá chung
+                </h2>
+                <div class="space-y-4">
+                    <!-- Nhận xét chung -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1 uppercase">Nhận xét chung</label>
+                        <textarea v-model="evaluation.comments" rows="3" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none no-print" placeholder="Nhập đánh giá, nhận xét chung về năng lực số..."></textarea>
+                        <div class="hidden print-block text-sm border-b border-dashed border-slate-400 min-h-[2.5rem] py-1 whitespace-pre-line">{{ evaluation.comments }}</div>
+                    </div>
+                    
+                    <!-- Phần dành riêng cho Giáo viên -->
+                    <div v-if="role === 'GV'">
+                        <label class="block text-sm font-bold text-slate-700 mb-1 uppercase">Đề xuất, kiến nghị</label>
+                        <textarea v-model="evaluation.suggestions" rows="2" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none no-print" placeholder="Các đề xuất, kiến nghị..."></textarea>
+                        <div class="hidden print-block text-sm border-b border-dashed border-slate-400 min-h-[2.5rem] py-1 whitespace-pre-line">{{ evaluation.suggestions }}</div>
+                    </div>
+
+                    <!-- Phần dành riêng cho Cán bộ quản lý -->
+                    <template v-if="role === 'CBQL'">
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1 uppercase">Đề xuất phát triển</label>
+                            <textarea v-model="evaluation.development" rows="2" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none no-print" placeholder="Nhập định hướng, đề xuất phát triển trong tương lai..."></textarea>
+                            <div class="hidden print-block text-sm border-b border-dashed border-slate-400 min-h-[2.5rem] py-1 whitespace-pre-line">{{ evaluation.development }}</div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-slate-700 mb-1 uppercase">Kế hoạch bồi dưỡng</label>
+                            <textarea v-model="evaluation.training" rows="2" class="w-full border border-slate-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none no-print" placeholder="Nhập lộ trình hoặc kế hoạch tham gia bồi dưỡng..."></textarea>
+                            <div class="hidden print-block text-sm border-b border-dashed border-slate-400 min-h-[2.5rem] py-1 whitespace-pre-line">{{ evaluation.training }}</div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="mt-8 flex justify-center gap-4 no-print border-t pt-8">
+                <button @click="resetForm" class="px-6 py-2 bg-white border border-slate-300 text-slate-600 rounded-lg hover:bg-slate-50 transition font-medium">
+                    <i class="fa-solid fa-rotate-left mr-2"></i>Làm mới
+                </button>
+                <button @click="printReport" class="px-6 py-2 bg-secondary text-white rounded-lg hover:bg-blue-600 shadow-md transition font-medium">
+                    <i class="fa-solid fa-print mr-2"></i>Xuất PDF / In báo cáo
+                </button>
+            </div>
+            
+            <!-- Print Signature Area -->
+            <div class="hidden print-flex mt-16 justify-between px-12 text-center print-break">
+                <div class="w-1/3 flex flex-col items-center">
+                    <p class="font-bold mb-24">{{ role === 'GV' ? 'GIÁO VIÊN' : 'CÁN BỘ QUẢN LÝ' }}</p>
+                    <p class="font-bold">{{ userInfo.name || '...........................................' }}</p>
+                </div>
+                <div class="w-1/3 flex flex-col items-center">
+                    <p class="italic mb-2">................, ngày ...... tháng ...... năm 20......</p>
+                    <p class="font-bold mb-20">NGƯỜI ĐÁNH GIÁ</p>
+                    <p class="font-bold">{{ userInfo.evaluator || '...........................................' }}</p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Sticky Floating Score Bar -->
+        <div class="fixed bottom-0 left-0 w-full bg-white border-t border-slate-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] z-50 no-print transition-transform duration-300" :class="{'translate-y-full': isScrollingDown, 'translate-y-0': !isScrollingDown}">
+            <div class="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div class="flex items-center gap-4 flex-grow w-full">
+                        <div class="bg-slate-100 p-2 rounded-lg text-center min-w-[80px]">
+                            <span class="block text-xs font-bold text-slate-500 uppercase">Tổng điểm</span>
+                            <span class="text-xl font-bold text-primary">{{ totalScore }}<span class="text-sm text-slate-400 font-normal">/{{ maxScore }}</span></span>
+                        </div>
+                        
+                        <div class="flex-grow">
+                            <div class="flex justify-between text-xs font-medium text-slate-500 mb-1">
+                                <span>Tiến độ hoàn thành: {{ completedItems }}/{{ totalItems }} tiêu chí</span>
+                                <span>{{ percentage }}%</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2.5">
+                                <div class="h-2.5 rounded-full transition-all duration-500" :class="classification.barColor" :style="{ width: percentage + '%' }"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-l pl-4 border-slate-200">
+                        <div class="text-right">
+                            <span class="block text-xs text-slate-500">Xếp loại dự kiến</span>
+                            <span class="font-bold text-lg" :class="classification.textColor">{{ classification.label }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Dữ liệu thô - GIÁO VIÊN ---
+        const gvData = [
+            {
+                name: "1. TỔ CHỨC DẠY HỌC TRONG MÔI TRƯỜNG SỐ",
+                items: [
+                    { id: "1.1", name: "Dạy học và giáo dục trong môi trường số", desc1: "Sử dụng được các chức năng và công cụ cơ bản của nền tảng LMS. Sử dụng được các công cụ hỗ trợ dạy học trực tuyến để triển khai phiên học, cung cấp tài liệu và tổ chức hoạt động đơn giản.", desc2: "Xây dựng được kế hoạch bài dạy theo tiếp cận công nghệ. Thiết kế và triển khai được mô hình dạy học kết hợp (blended learning) hiệu quả. Lựa chọn và áp dụng được công cụ số phù hợp với mục tiêu dạy học.", desc3: "Hướng dẫn được phương pháp dạy học theo dự án trực tuyến, lớp học đảo ngược. Sáng tạo và đổi mới các mô hình dạy học ứng dụng công nghệ số. Hướng dẫn được đồng nghiệp thiết kế trải nghiệm học tập số hóa tiên tiến." },
+                    { id: "1.2", name: "Hướng dẫn, hỗ trợ học tập", desc1: "Sử dụng được các kênh giao tiếp số (email, diễn đàn) để trả lời câu hỏi và hỗ trợ người học.", desc2: "Sử dụng được đa dạng kênh giao tiếp số để tương tác, giải đáp và cung cấp tài liệu hỗ trợ. Sử dụng được dữ liệu học tập số để xác định người học cần hỗ trợ và lựa chọn biện pháp phù hợp.", desc3: "Thiết lập được môi trường số hỗ trợ cá nhân hóa và kịp thời cho người học. Hướng dẫn được đồng nghiệp xây dựng văn hóa hỗ trợ học tập tích cực trên nền tảng số. Sáng tạo, thử nghiệm, phát triển được công cụ/phương pháp hỗ trợ dạy học thông minh." },
+                    { id: "1.3", name: "Cá nhân hóa người học", desc1: "Xác định được nhu cầu, sự khác biệt của người học trong sử dụng công nghệ số.", desc2: "Lựa chọn, điều chỉnh được công cụ và nội dung số phù hợp với nhu cầu người học. Sử dụng được công nghệ số để thiết kế lộ trình học tập linh hoạt, cho phép người học tự chủ. Thiết kế được nhiệm vụ học tập phân hóa theo trình độ, năng lực và sở thích trong môi trường trực tuyến.", desc3: "Tích hợp linh hoạt các công cụ số hỗ trợ hoạt động học tập thích ứng. Thiết kế được môi trường học tập số cá nhân hóa, hỗ trợ người học tự định hướng. Đánh giá được hiệu quả của các chiến lược dạy học cá nhân hóa bằng công nghệ." },
+                    { id: "1.4", name: "Học tập cộng tác", desc1: "Sử dụng được công cụ số cơ bản để tổ chức người học làm việc nhóm đơn giản.", desc2: "Thiết kế được nhiệm vụ học tập, chia sẻ tài liệu, ý tưởng trên nền tảng số. Thiết kế được nhiệm vụ học tập yêu cầu người học dùng đa dạng công cụ số để cùng xây dựng nội dung. Hướng dẫn được người học kĩ năng giao tiếp, hợp tác hiệu quả trong môi trường số. Sử dụng được công nghệ để quản lý và đánh giá hiệu quả làm việc nhóm.", desc3: "Xây dựng được dự án cộng tác phức tạp, kết nối người học theo mô hình học tập cộng tác. Xây dựng và quản lí được cộng đồng học tập trực tuyến. Hướng dẫn được đồng nghiệp triển khai học tập cộng tác trong nhà trường." }
+                ]
+            },
+            {
+                name: "2. KIỂM TRA, ĐÁNH GIÁ",
+                items: [
+                    { id: "2.1", name: "Phương thức đánh giá", desc1: "Sử dụng được hình thức kiểm tra truyền thống, có thể nhập điểm vào hệ thống số. Áp dụng được một số công cụ tạo bài kiểm tra online đơn giản.", desc2: "Sử dụng được các công cụ số phổ biến để tạo bài kiểm tra, khảo sát đánh giá quá trình và tổng kết. Kết hợp được hình thức đánh giá số đơn giản vào quá trình dạy học. Thiết kế và áp dụng được đa dạng công cụ đánh giá số phù hợp với mục tiêu nội dung học tập.", desc3: "Sáng tạo triển khai các phương pháp, mô hình đánh giá số tiên tiến, đáp ứng đánh giá năng lực phức hợp. Hướng dẫn được đồng nghiệp xây dựng và áp dụng chiến lược đánh giá số hiệu quả, công bằng." },
+                    { id: "2.2", name: "Phân tích kết quả học tập", desc1: "Sử dụng được các chức năng cơ bản của LMS để xem báo cáo hoạt động, kết quả của người học.", desc2: "Phân tích được dữ liệu từ hệ thống đánh giá số để nhận diện tiến bộ và thành tích học tập. Sử dụng được công cụ trực quan hóa dữ liệu để xây dựng báo cáo đánh giá sự tiến bộ người học. Áp dụng được kĩ thuật phân tích dữ liệu nâng cao để dự đoán xu hướng, phát hiện sớm vấn đề.", desc3: "Xây dựng được bảng điều khiển (dashboard) dữ liệu học tập trực quan tự động. Hướng dẫn được đồng nghiệp khai thác và diễn giải dữ liệu để cải tiến dạy học." },
+                    { id: "2.3", name: "Phản hồi và đánh giá cải tiến", desc1: "Sử dụng được chức năng phản hồi trên LMS. Cung cấp phản hồi kịp thời cho người học bằng văn bản hoặc điểm số qua nền tảng số.", desc2: "Sử dụng được đa dạng công cụ số (ghi âm, video, bình luận trực tiếp) để đưa phản hồi chi tiết. Thiết kế được quy trình phản hồi và đánh giá cải tiến có sự tham gia của người học (tự đánh giá, đánh giá chéo).", desc3: "Sử dụng được dữ liệu phân tích để điều chỉnh kế hoạch và cung cấp nhiệm vụ học tập hỗ trợ cá nhân. Hướng dẫn được đồng nghiệp sử dụng phản hồi số và dữ liệu học tập để cải tiến liên tục." }
+                ]
+            },
+            {
+                name: "3. TRAO QUYỀN CHO NGƯỜI HỌC",
+                items: [
+                    { id: "3.1", name: "Tiếp cận và hòa nhập", desc1: "Sử dụng được các công cụ số cơ bản để hỗ trợ người học gặp khó khăn trong học tập.", desc2: "Lựa chọn và sử dụng được công cụ, tài nguyên số có tính đến sự đa dạng của người học (ngôn ngữ, phong cách học, khuyết tật). Thiết kế được nội dung, tài nguyên số đảm bảo tính tiếp cận và hòa nhập. Đảm bảo mọi người học có cơ hội sử dụng thiết bị, hạ tầng số của nhà trường.", desc3: "Khai thác và đa dạng hóa công cụ số để đáp ứng nhu cầu đặc biệt của người học. Hướng dẫn được đồng nghiệp về chiến lược và công nghệ số hỗ trợ giáo dục hòa nhập." },
+                    { id: "3.2", name: "Giải quyết vấn đề", desc1: "Thiết kế được nhiệm vụ học tập yêu cầu người học dùng Internet để tìm kiếm thông tin, giải quyết vấn đề đơn giản.", desc2: "Thiết kế được nhiệm vụ/dự án học tập yêu cầu người học dùng công nghệ số để xác định vấn đề, thu thập, phân tích thông tin và đề xuất giải pháp.", desc3: "Tổ chức được các hoạt động học tập dựa trên vấn đề (problem-based) hoặc dự án (project-based) phức tạp. Hướng dẫn được đồng nghiệp xây dựng hệ sinh thái học tập số, kết nối người học với chuyên gia và vấn đề thực tiễn cộng đồng." },
+                    { id: "3.3", name: "Khuyến khích sự tham gia tích cực của người học", desc1: "Sử dụng được các công cụ tương tác số đơn giản để thu hút sự chú ý và khuyến khích người học tham gia.", desc2: "Tích hợp được công nghệ số nhằm trực quan hóa và tăng hiệu quả trình bày nội dung dạy học. Tích hợp được các yếu tố trò chơi hóa, tương tác để thúc đẩy người học tích cực tham gia. Thiết kế được hoạt động khuyến khích người học tự tạo nội dung số, chia sẻ kiến thức, giải quyết vấn đề bằng mô phỏng, thực tế ảo.", desc3: "Sáng tạo và điều phối được dự án học tập số, tạo môi trường học tập năng động, lấy người học làm trung tâm. Hướng dẫn được đồng nghiệp sáng tạo triển khai hoạt động học tập tích cực bằng công nghệ số." }
+                ]
+            },
+            {
+                name: "4. KĨ NĂNG CÔNG NGHỆ SỐ",
+                items: [
+                    { id: "4.1", name: "Kĩ năng thông tin và dữ liệu", desc1: "Sử dụng được công cụ tìm kiếm để tìm thông tin, tài liệu phục vụ bài giảng. Lưu trữ và sắp xếp khoa học các dữ liệu trên máy tính hoặc đám mây.", desc2: "Đánh giá được độ tin cậy của nguồn tin trên Internet, mạng xã hội. Sử dụng được các kĩ thuật tìm kiếm nâng cao. Hướng dẫn được người học tư duy phản biện khi tìm kiếm, xử lí thông tin số. Tổ chức được nhiệm vụ học tập cho phép người học chủ động tìm kiếm và xử lí thông tin.", desc3: "Sử dụng được công cụ thu thập và trực quan hóa dữ liệu, phân tích và đánh giá độ tin cậy thông tin. Hướng dẫn được đồng nghiệp tích hợp phát triển năng lực thông tin vào chương trình dạy học." },
+                    { id: "4.2", name: "Sáng tạo nội dung số", desc1: "Sử dụng được các công cụ số phổ biến để tạo nội dung dạy học theo định dạng số khác nhau.", desc2: "Tích hợp được các định dạng số trong nội dung thực hiện nhiệm vụ của người học. Tích hợp được công nghệ số trong hoạt động sáng tạo nội dung, xây dựng kho học liệu số. Hướng dẫn được người học sử dụng công cụ tạo nội dung số, thực hiện quyền tác giả, trích dẫn và chia sẻ hợp pháp. Sử dụng được đa dạng nền tảng, công cụ số để tạo và chia sẻ nội dung hợp lệ.", desc3: "Sử dụng thành thạo công cụ chuyên dụng để tạo học liệu số có tính tương tác cao. Hướng dẫn được đồng nghiệp phát triển nền tảng học tập tích hợp AI, thực tế ảo trong sáng tạo nội dung." },
+                    { id: "4.3", name: "An toàn", desc1: "Có hiểu biết về bảo vệ sức khỏe thể chất, tinh thần và an sinh số trong dạy học. Bố trí, sắp xếp được không gian, thời gian sử dụng thiết bị số hợp lí cho người học.", desc2: "Tích hợp được kiến thức nhận diện và phòng tránh các rủi ro phổ biến trên mạng vào dạy học. Áp dụng được các biện pháp bảo vệ dữ liệu cá nhân và của người học. Hướng dẫn người học bảo vệ dữ liệu cá nhân, định danh số, quản lí dấu vết số. Nhận diện và xử lí được các tình huống bắt nạt trực tuyến.", desc3: "Thực hiện được biện pháp đảm bảo an toàn sức khỏe, giảm căng thẳng trong môi trường số cho người học. Cập nhật và phổ biến các xu hướng, mối đe dọa mới và cách phòng chống cho cộng đồng giáo viên, phụ huynh. Hướng dẫn được đồng nghiệp xây dựng môi trường học tập số an toàn, lành mạnh." }
+                ]
+            },
+            {
+                name: "5. PHÁT TRIỂN CHUYÊN MÔN",
+                items: [
+                    { id: "5.1", name: "Giao tiếp trong tổ chức", desc1: "Sử dụng được email, nhóm chat của trường/tổ để trao đổi thông tin công việc và giao tiếp với phụ huynh.", desc2: "Sử dụng hiệu quả các kênh giao tiếp số chính thức để tương tác với các bên liên quan, phù hợp từng đối tượng. Sử dụng được công cụ số để giao tiếp, chia sẻ thông tin và tham gia hoạt động chuyên môn với đồng nghiệp.", desc3: "Xây dựng và quản lí được chiến lược truyền thông số, các kênh truyền thông chính thức của trường. Hướng dẫn được đồng nghiệp đổi mới giao tiếp trong tổ chức bằng công nghệ số, tăng tính minh bạch." },
+                    { id: "5.2", name: "Hợp tác phát triển chuyên môn", desc1: "Chủ động tham gia các cộng đồng học tập trực tuyến. Tự đánh giá được khó khăn, thách thức và thuận lợi trong ứng dụng công nghệ số.", desc2: "Xây dựng được kế hoạch cải tiến, đổi mới ứng dụng công nghệ số trong hoạt động chuyên môn. Chủ động tìm kiếm và tham gia các khóa học để cập nhật kiến thức, kĩ năng số. Tự đánh giá, cải tiến ứng dụng công nghệ số trong dạy học. Tham gia chia sẻ và cập nhật kĩ năng số với đồng nghiệp.", desc3: "Cập nhật được các xu hướng công nghệ và phương pháp sư phạm số mới, áp dụng vào thực tiễn dạy học. Hướng dẫn được đồng nghiệp xây dựng yêu cầu dạy học trong môi trường số, phát triển công cụ hỗ trợ tự phản ánh về năng lực số." },
+                    { id: "5.3", name: "Phát triển, sử dụng, chia sẻ và quản lí học liệu số", desc1: "Sử dụng được công cụ tìm kiếm để tìm tài nguyên, kho học liệu số, thư viện trực tuyến, OER.", desc2: "Lựa chọn được tài nguyên phù hợp với mục tiêu bài học. Lựa chọn và sử dụng được tài nguyên, học liệu số phù hợp với đối tượng đa dạng của người học. Tạo được tài nguyên số phục vụ môn học từ các nguồn có sẵn. Tổ chức lưu trữ, quản lí và chia sẻ được kho học liệu số cá nhân khoa học, an toàn.", desc3: "Đánh giá được chất lượng, độ tin cậy, tính pháp lí và sư phạm của tài nguyên số. Xây dựng và quản trị được các hệ thống quản lí, chia sẻ tài nguyên số cho tổ/trường. Hướng dẫn được đồng nghiệp xây dựng và quản trị kho học liệu số mở của nhà trường." }
+                ]
+            },
+            {
+                name: "6. ỨNG DỤNG TRÍ TUỆ NHÂN TẠO (AI)",
+                items: [
+                    { id: "6.1", name: "Tư duy lấy con người làm trung tâm", desc1: "Nhận diện được cách vận hành của AI và các công nghệ có tích hợp AI. Nhận diện được các khả năng tích hợp AI trong hỗ trợ hoạt động dạy học. Sử dụng được các công cụ AI đơn giản (AI tạo sinh) để hỗ trợ dạy học và kiểm tra đánh giá.", desc2: "Thiết kế được các hoạt động dạy học tích hợp AI một cách sáng tạo và có trách nhiệm. Khai thác hiệu quả công cụ AI chuyên biệt cho giáo dục để tạo học liệu tương tác, cá nhân hóa nội dung và hỗ trợ chấm điểm tự động. Hướng dẫn được người học sử dụng AI có trách nhiệm, nhận biết ưu/nhược điểm và rủi ro.", desc3: "Triển khai đổi mới phương pháp dạy học tích hợp sâu AI, đáp ứng cá nhân hóa và dạy học thích ứng. Hướng dẫn, lựa chọn và đề xuất sử dụng các công cụ AI phù hợp cho đồng nghiệp." },
+                    { id: "6.2", name: "Đạo đức AI", desc1: "Nhận diện được khả năng thu thập dữ liệu cá nhân khi sử dụng AI và tiềm ẩn rủi ro khi dùng AI không đúng cách. Thể hiện sự cẩn trọng và có trách nhiệm đối với quyền riêng tư người học khi sử dụng AI.", desc2: "Lựa chọn, đánh giá được ứng dụng AI dựa trên tiêu chí đạo đức, chính sách bảo mật, tính công bằng trong tiếp cận. Thiết kế và tích hợp hoạt động hướng dẫn người học sử dụng AI an toàn và có đạo đức. Thiết kế hoạt động giáo dục tích hợp AI, cân bằng tương tác công nghệ và tương tác xã hội.", desc3: "Đánh giá được ưu/nhược điểm và vấn đề đạo đức của công cụ AI trong giáo dục, cập nhật và chia sẻ với đồng nghiệp. Tham gia xây dựng chính sách, hướng dẫn về sử dụng AI có đạo đức trong nhà trường." },
+                    { id: "6.3", name: "Sư phạm AI", desc1: "Nhận diện được khả năng tích hợp AI theo hướng cá nhân hóa và lấy người học làm trung tâm. Có hiểu biết về lợi ích sư phạm của công cụ AI để hỗ trợ dạy học.", desc2: "Ứng dụng được công cụ AI linh hoạt trong các bước dạy học, đảm bảo nguyên tắc lấy người học làm trung tâm. Lựa chọn và ứng dụng được hệ thống AI phù hợp, giảm thiểu rủi ro trong thiết kế dạy học và kiểm tra đánh giá. Tổ chức và quản lý được hoạt động tương tác 3 chiều: giáo viên – người học – công cụ AI.", desc3: "Xây dựng được nguyên tắc sư phạm sử dụng AI trong hoạt động dạy học. Hướng dẫn được đồng nghiệp thiết kế và sử dụng AI theo tiếp cận đồng sáng tạo, lấy con người làm trung tâm." },
+                    { id: "6.4", name: "AI cho phát triển chuyên môn", desc1: "Biết cách tìm kiếm, khai thác khóa học trực tuyến về AI phục vụ phát triển chuyên môn. Sẵn sàng thử nghiệm các công cụ, ứng dụng AI để hỗ trợ chuyên môn.", desc2: "Vận dụng được tư duy phản biện và sáng tạo để xác định vấn đề phức tạp trong dạy học và đề xuất giải pháp số, AI. Ứng dụng được công cụ AI để cá nhân hóa hoạt động phát triển chuyên môn. Thường xuyên cập nhật xu hướng công nghệ AI và ứng dụng phù hợp trong chuyên môn.", desc3: "Hướng dẫn được đồng nghiệp, đề xuất sáng kiến đổi mới, áp dụng công nghệ số và AI để giải quyết vấn đề mang tính hệ thống. Phân tích, đánh giá được các tác động của công cụ AI (rủi ro và lợi ích) để đảm bảo sự phát triển toàn diện của người học." }
+                ]
+            }
+        ];
+
+        // --- Dữ liệu thô - CÁN BỘ QUẢN LÝ (Gồm 5 miền năng lực và gợi ý minh chứng) ---
+        const cbqlData = [
+            {
+                name: "1. TỔ CHỨC DẠY HỌC, GIÁO DỤC TRONG MÔI TRƯỜNG SỐ",
+                items: [
+                    { id: "1.1", name: "Hoạt động bồi dưỡng giáo viên", desc1: "Tổ chức bồi dưỡng giúp giáo viên làm quen với công nghệ số, áp dụng công cụ số đơn giản vào dạy học.", desc2: "Thiết kế và triển khai bồi dưỡng giúp giáo viên sử dụng thành thạo công nghệ; Kết hợp đa dạng phương pháp học tập.", desc3: "Xây dựng chiến lược và tổ chức các chương trình phát triển chuyên môn sâu, giúp giáo viên đổi mới sáng tạo trong ứng dụng công nghệ.", sugg1: "Tổ chức bồi dưỡng công cụ số đơn giản. Minh chứng: Kế hoạch và danh sách ký tên lớp tập huấn CNTT cơ bản.", sugg2: "Kết hợp đa dạng phương pháp bồi dưỡng. Minh chứng: Báo cáo đánh giá hiệu quả sau bồi dưỡng; Kho bài giảng tập huấn nội bộ.", sugg3: "Chiến lược phát triển chuyên môn sâu. Minh chứng: Văn bản chiến lược đổi mới sáng tạo; Kế hoạch phát triển chuyên gia số cốt cán." },
+                    { id: "1.2", name: "Hạ tầng và thiết bị", desc1: "Đảm bảo điều kiện cho giáo viên khai thác công nghệ để hỗ trợ giảng dạy.", desc2: "Quản lý hiệu quả hạ tầng công nghệ, đảm bảo kết nối mạng ổn định và đủ thiết bị; Có phương án dự phòng.", desc3: "Xây dựng chiến lược phát triển hạ tầng số hiện đại, đồng bộ và có tính mở; Tích hợp công nghệ tiên tiến.", sugg1: "Đảm bảo điều kiện khai thác công nghệ cơ bản. Minh chứng: Nhật ký sử dụng phòng máy/thiết bị; Kế hoạch bảo trì.", sugg2: "Quản lý hạ tầng hiệu quả, có phương án dự phòng. Minh chứng: Sơ đồ mạng; Quy trình xử lý sự cố kỹ thuật; Báo cáo nâng cấp hạ tầng.", sugg3: "Chiến lược hạ tầng số hiện đại, đồng bộ. Minh chứng: Dự án đầu tư công nghệ tiên tiến (AI, IoT); Hợp đồng cung cấp hạ tầng băng thông rộng." },
+                    { id: "1.3", name: "Quyền công dân số", desc1: "Thiết lập không gian số cơ bản có kiểm soát, tài nguyên an toàn.", desc2: "Quản lý trung tâm lưu trữ phân quyền; Hướng dẫn hoạt động xã hội minh bạch.", desc3: "Tạo diễn đàn chuyên sâu; Định hướng lan tỏa giá trị tích cực qua số hóa.", sugg1: "Duy trì không gian số có kiểm soát. Minh chứng: Nội quy sử dụng mạng nội bộ; Tài liệu hướng dẫn ứng xử văn minh.", sugg2: "Vận hành trung tâm lưu trữ số có phân quyền. Minh chứng: Hệ thống quản trị dữ liệu (Google Drive/OneDrive) có phân cấp truy cập.", sugg3: "Định hướng lan tỏa giá trị tích cực qua số hóa. Minh chứng: Link diễn đàn thảo luận chuyên sâu; Sản phẩm truyền thông cộng đồng số." },
+                    { id: "1.4", name: "Bồi dưỡng kỹ năng số an toàn, đạo đức", desc1: "Khóa bồi dưỡng cơ bản; Hướng dẫn nhận diện rủi ro cơ bản.", desc2: "Bồi dưỡng chuyên sâu lý thuyết & thực hành; Kỹ năng phòng tránh rủi ro.", desc3: "Thiết kế chương trình toàn diện cập nhật; Hình thành đội ngũ nòng cốt kỹ năng số.", sugg1: "Triển khai khóa học nhận diện rủi ro cơ bản. Minh chứng: Tài liệu phổ biến pháp luật số (Luật An ninh mạng).", sugg2: "Bồi dưỡng chuyên sâu về đạo đức và thực hành an toàn. Minh chứng: Giấy chứng nhận hoàn thành các khóa bồi dưỡng an toàn thông tin chuyên sâu.", sugg3: "Hình thành đội ngũ nòng cốt dẫn dắt an toàn số. Minh chứng: Quyết định thành lập và biên bản họp của Tổ an toàn số/Phản ứng nhanh." }
+                ]
+            },
+            {
+                name: "2. HOẠCH ĐỊNH CHIẾN LƯỢC GIÁO DỤC",
+                items: [
+                    { id: "2.1", name: "Huy động nguồn lực xây dựng chiến lược", desc1: "Nhận diện huy động nguồn lực cơ bản đóng góp ý kiến.", desc2: "Phối hợp đa dạng nguồn lực, kế hoạch khả thi, đồng bộ.", desc3: "Tối ưu hóa nguồn lực; Tầm nhìn dài hạn thúc đẩy uy tín nhà trường.", sugg1: "Huy động nguồn lực tham gia đóng góp ý kiến. Minh chứng: Biên bản họp lấy ý kiến về kế hoạch ứng dụng CNTT.", sugg2: "Phối hợp đa dạng nguồn lực, kế hoạch đồng bộ. Minh chứng: Văn bản thỏa thuận hợp tác với các đơn vị công nghệ; Kế hoạch kinh phí số hóa.", sugg3: "Tối ưu hóa nguồn lực, tầm nhìn dài hạn. Minh chứng: Chiến lược phát triển trường học số 5 năm; Báo cáo tối ưu hóa ngân sách số." },
+                    { id: "2.2", name: "Kế hoạch ứng dụng KHCN dựa trên ngành", desc1: "Vận dụng kế hoạch cấp trên xây dựng tại cơ sở.", desc2: "Phân tích yêu cầu xã hội; Xác định mục tiêu, lộ trình rõ ràng.", desc3: "Dẫn dắt hoạch định; Tích hợp xu hướng mới dự báo dài hạn.", sugg1: "Vận dụng kế hoạch cấp trên vào cơ sở. Minh chứng: Kế hoạch thực hiện nhiệm vụ CNTT năm học của trường.", sugg2: "Phân tích yêu cầu xã hội, xác định lộ trình rõ ràng. Minh chứng: Bản phân tích SWOT về năng lực số của trường; Kế hoạch lộ trình chuyển đổi số.", sugg3: "Dự báo dài hạn và giải pháp đổi mới quản lý. Minh chứng: Đề án chuyển đổi số toàn diện được cấp trên phê duyệt/đánh giá cao." },
+                    { id: "2.3", name: "Đánh giá, điều chỉnh tiến độ", desc1: "Theo dõi định kỳ tiến độ; Đề xuất điều chỉnh cơ bản.", desc2: "Đánh giá khoa học theo chỉ số; Phân tích đề xuất giải pháp.", desc3: "Thiết lập cơ chế giám sát liên tục; Điều chỉnh linh hoạt bằng dữ liệu.", sugg1: "Theo dõi và nhận diện hạn chế định kỳ. Minh chứng: Báo cáo sơ kết/tổng kết việc thực hiện kế hoạch CNTT.", sugg2: "Hệ thống đánh giá khoa học dựa trên chỉ số. Minh chứng: Bộ tiêu chí/KPI đánh giá năng lực số của giáo viên và tổ chuyên môn.", sugg3: "Điều chỉnh linh hoạt dựa trên phân tích dữ liệu. Minh chứng: Bảng Dashboard theo dõi tiến độ thời gian thực; Quyết định điều chỉnh kế hoạch dựa trên dữ liệu." },
+                    { id: "2.4", name: "Môi trường hợp tác các bên liên quan", desc1: "Thiết lập kênh trao đổi minh bạch thu thập ý kiến.", desc2: "Tổ chức môi trường đa chiều; Truyền thông quảng bá thương hiệu.", desc3: "Duy trì mạng lưới hợp tác chiến lược lâu dài; Xây dựng văn hóa ghi nhận.", sugg1: "Thiết lập kênh trao đổi minh bạch. Minh chứng: Hộp thư điện tử góp ý; Kênh truyền thông (Zalo/Website) tiếp nhận phản hồi.", sugg2: "Tổ chức môi trường hợp tác đa chiều, quảng bá thương hiệu. Minh chứng: Kế hoạch truyền thông đa kênh; Báo cáo tổng hợp ý kiến từ phụ huynh/cộng đồng.", sugg3: "Xây dựng mạng lưới hợp tác chiến lược lâu dài. Minh chứng: Biên bản ghi nhớ (MOU) với các tổ chức giáo dục quốc tế hoặc doanh nghiệp công nghệ lớn." },
+                    { id: "2.5", name: "Chia sẻ kinh nghiệm cộng đồng", desc1: "Chia sẻ kinh nghiệm cơ bản thực tiễn tại địa phương.", desc2: "Tổng hợp bài học thành tài liệu hệ thống; Tổ chức diễn đàn học thuật.", desc3: "Tổ chức hội thảo nghiên cứu tác động; Đề xuất chính sách bền vững.", sugg1: "Chia sẻ kinh nghiệm cơ bản tại địa phương. Minh chứng: Bài tham luận tại hội nghị giáo dục cấp cụm/quận.", sugg2: "Tổng hợp bài học kinh nghiệm thành tài liệu hệ thống. Minh chứng: Sổ tay hướng dẫn quản lý số; Link các bài viết chia sẻ chuyên môn trên diễn đàn ngành.", sugg3: "Tổ chức hội thảo nghiên cứu tác động công nghệ. Minh chứng: Kế hoạch và kỷ yếu hội thảo do CBQL chủ trì; Đề xuất chính sách giáo dục số." }
+                ]
+            },
+            {
+                name: "3. TRAO QUYỀN CHO GIÁO VIÊN VÀ NGƯỜI HỌC",
+                items: [
+                    { id: "3.1", name: "Trao quyền phát triển năng lực nghề nghiệp", desc1: "Ban hành cơ chế khuyến khích; Tạo điều kiện bồi dưỡng cơ bản.", desc2: "Tạo cơ hội giáo viên lãnh đạo nhóm; Tham gia khóa đào tạo chuyên sâu.", desc3: "Trao quyền tự chủ tối đa; Trở thành hạt nhân thúc đẩy chiến lược giáo dục.", sugg1: "Ban hành cơ chế khuyến khích năng lực nghề nghiệp. Minh chứng: Quyết định khen thưởng giáo viên có thành tích ứng dụng CNTT.", sugg2: "Tạo cơ hội lãnh đạo nhóm/dự án cho giáo viên. Minh chứng: Quyết định giao quyền tự chủ cho các Tổ chuyên môn số; Kế hoạch phát triển nghề nghiệp cá nhân.", sugg3: "Trao quyền tự chủ tối đa, thúc đẩy hạt nhân đổi mới. Minh chứng: Hồ sơ các dự án sáng tạo do giáo viên làm chủ nhiệm; Báo cáo tác động bền vững của sáng kiến." },
+                    { id: "3.2", name: "Xây dựng sự tự tin kỹ năng số", desc1: "Hỗ trợ giáo viên làm quen công cụ; Cung cấp tài liệu hướng dẫn.", desc2: "Tạo môi trường thử nghiệm; Điều chỉnh phương pháp đáp ứng đổi mới.", desc3: "Phát triển đội ngũ dẫn dắt; Hỗ trợ, truyền cảm hứng cộng đồng giáo dục.", sugg1: "Hỗ trợ giáo viên làm quen công cụ số cơ bản. Minh chứng: Kho tài liệu hướng dẫn sử dụng phần mềm nội bộ.", sugg2: "Giúp giáo viên tự tin điều chỉnh phương pháp dạy học. Minh chứng: Biên bản dự giờ đánh giá sự đổi mới trong phương pháp dạy học số của giáo viên.", sugg3: "Phát triển đội ngũ dẫn dắt và truyền cảm hứng. Minh chứng: Danh sách đội ngũ cố vấn công nghệ (Mentors) trong trường; Kế hoạch lan tỏa cộng đồng." },
+                    { id: "3.3", name: "Truyền cảm hứng đổi mới và hợp tác", desc1: "Khuyến khích tư duy đổi mới; Tạo không gian/thời gian làm quen.", desc2: "Phân bổ nguồn lực hợp lý; Thúc đẩy môi trường hợp tác thực chất.", desc3: "Thiết kế không gian linh hoạt thử nghiệm quy mô lớn; Lan tỏa văn hóa số.", sugg1: "Khuyến khích tiếp cận tư duy đổi mới. Minh chứng: Thông báo phát động phong trào đổi mới sáng tạo trong nhà trường.", sugg2: "Phân bổ nguồn lực hợp lý (thời gian, không gian). Minh chứng: Thời khóa biểu linh hoạt; Phòng Lab/Không gian sáng tạo (Makerspace) cho giáo viên.", sugg3: "Thiết kế không gian và thời gian linh hoạt quy mô lớn. Minh chứng: Chính sách 'Giờ sáng tạo'; Link sản phẩm công nghệ do giáo viên và học sinh đồng sáng kiến." },
+                    { id: "3.4", name: "Hỗ trợ nhu cầu đa dạng (học thuật, văn hóa, cảm xúc)", desc1: "Hướng dẫn giáo viên dùng công cụ đơn giản hỗ trợ quá trình dạy.", desc2: "Tích hợp công nghệ đáp ứng nhu cầu đa dạng; Phối hợp phụ huynh.", desc3: "Triển khai hệ thống đáp ứng toàn diện; Sáng tạo giải pháp đồng thời.", sugg1: "Hướng dẫn giáo viên điều chỉnh nội dung số. Minh chứng: Kế hoạch giáo dục cá nhân cho HS khuyết tật/khó khăn có dùng công nghệ.", sugg2: "Tích hợp công nghệ đáp ứng văn hóa và cảm xúc. Minh chứng: Báo cáo khảo sát sức khỏe tâm thần/cảm xúc học sinh qua ứng dụng số; Hệ thống hỗ trợ đa văn hóa.", sugg3: "Sáng tạo giải pháp tích hợp toàn diện và bền vững. Minh chứng: Mô hình trường học thích ứng (Adaptive School); Tài liệu chia sẻ mô hình cá nhân hóa cho cộng đồng." },
+                    { id: "3.5", name: "Công cụ đánh giá định hướng cá nhân hóa", desc1: "Dùng công cụ đánh giá trực tuyến theo dõi tiến bộ học tập.", desc2: "Vận hành hệ thống đánh giá thời gian thực; Điều chỉnh phương pháp cá nhân hóa.", desc3: "Tùy biến công cụ thông minh; Khai thác dữ liệu lớn dự đoán tiến trình.", sugg1: "Dùng công cụ đánh giá trực tuyến định kỳ. Minh chứng: Link các bài kiểm tra đánh giá trên Google Forms/Azota cấp trường.", sugg2: "Vận hành hệ thống đánh giá số theo thời gian thực. Minh chứng: Tài khoản quản trị hệ thống LMS có chức năng Tracking tiến độ học sinh theo thời gian thực.", sugg3: "Khai thác dữ liệu lớn (Big Data) để dự báo. Minh chứng: Báo cáo phân tích dữ liệu học tập hàng năm; Hệ thống gợi ý lộ trình học tập tự động." }
+                ]
+            },
+            {
+                name: "4. KĨ NĂNG CÔNG NGHỆ SỐ",
+                items: [
+                    { id: "4.1", name: "Xây dựng cơ sở hạ tầng, hệ thống", desc1: "Phối hợp xây dựng hạ tầng cơ bản phục vụ giáo dục.", desc2: "Chủ trì điều phối vận hành hệ thống phần mềm, dữ liệu số.", desc3: "Hoạch định lộ trình hạ tầng tiên tiến; Chia sẻ kinh nghiệm quản lý.", sugg1: "Tham gia phối hợp xây dựng hạ tầng cơ bản. Minh chứng: Biên bản nghiệm thu thiết bị/phần mềm.", sugg2: "Chủ trì điều phối các nhóm chuyên môn xây dựng hệ thống. Minh chứng: Quyết định thành lập Ban chuyển đổi số; Sơ đồ kiến trúc dữ liệu nhà trường.", sugg3: "Hoạch định lộ trình hạ tầng tiên tiến dài hạn. Minh chứng: Đề án xây dựng trung tâm dữ liệu (Data Center) hoặc hệ thống Cloud riêng cho trường." },
+                    { id: "4.2", name: "Đảm bảo nguồn lực mở rộng tương lai", desc1: "Phân bổ hợp lý nguồn lực thiết yếu, thiết bị cơ bản sẵn sàng.", desc2: "Quản lý tối ưu chi phí; Kế hoạch nâng cấp mở rộng linh hoạt.", desc3: "Hoạch định chiến lược nguồn lực dài hạn; Thu hút đầu tư bền vững.", sugg1: "Phân bổ hợp lý nguồn lực thiết yếu. Minh chứng: Dự toán ngân sách mua sắm thiết bị dạy học số.", sugg2: "Kế hoạch nâng cấp hạ tầng đảm bảo tính linh hoạt. Minh chứng: Kế hoạch bảo trì và nâng cấp định kỳ 3-5 năm; Hợp đồng dịch vụ hỗ trợ kỹ thuật 24/7.", sugg3: "Chiến lược dài hạn gắn với tầm nhìn đổi mới. Minh chứng: Văn bản huy động xã hội hóa công nghệ; Kế hoạch đầu tư nhân lực CNTT chất lượng cao." },
+                    { id: "4.3", name: "Bảo vệ quyền riêng tư và an ninh", desc1: "Biện pháp bảo mật cơ bản; Hướng dẫn tuân thủ quy định riêng tư.", desc2: "Giám sát chính sách quản lý dữ liệu; Tập huấn nâng cao nhận thức.", desc3: "Chiến lược an ninh toàn diện (mã hóa, phân quyền); Quy trình phản ứng sự cố.", sugg1: "Thực hiện biện pháp bảo mật cơ bản. Minh chứng: Cài đặt phần mềm diệt virus; Quy định bảo mật mật khẩu.", sugg2: "Xây dựng và giám sát hệ thống chính sách quản lý dữ liệu. Minh chứng: Quy định quản lý và sử dụng dữ liệu cá nhân; Chứng chỉ bảo mật Website trường (SSL).", sugg3: "Hoạch định chiến lược an ninh dữ liệu toàn diện. Minh chứng: Hệ thống mã hóa dữ liệu; Quy trình phản ứng nhanh với sự cố rò rỉ dữ liệu (Incident Response Plan)." },
+                    { id: "4.4", name: "Môi trường sáng tạo nội dung số", desc1: "Cơ chế khuyến khích tạo nội dung đổi mới; Hỗ trợ công cụ cơ bản.", desc2: "Cung cấp hạ tầng làm học liệu tương tác; Tạo cơ chế phản hồi chia sẻ.", desc3: "Chiến lược không gian mở; Thúc đẩy sáng tạo qua cuộc thi quy mô.", sugg1: "Khuyến khích giáo viên tạo nội dung đổi mới. Minh chứng: Thể lệ cuộc thi thiết kế bài giảng điện tử/E-learning cấp trường.", sugg2: "Tổ chức các dự án xây dựng học liệu tương tác cao. Minh chứng: Kho học liệu số dùng chung của trường (số lượng, chất lượng); Bản quyền các phần mềm đồ họa/dựng phim.", sugg3: "Không gian sáng tạo mở, kết nối chuyên gia. Minh chứng: Link kết nối với các Studio hoặc chuyên gia sáng tạo nội dung; Kết quả các cuộc thi sáng tạo số cấp tỉnh/quốc gia." },
+                    { id: "4.5", name: "Ứng dụng AI hiệu quả có trách nhiệm", desc1: "Tổ chức khóa bồi dưỡng AI quản lý; Tuân thủ nguyên tắc an toàn.", desc2: "Đánh giá lựa chọn AI chuyên biệt; Cải tiến giáo dục dựa trên dữ liệu.", desc3: "Chiến lược trợ lý ảo, AI tạo sinh; Dẫn dắt giải pháp sáng tạo đột phá.", sugg1: "Tổ chức bồi dưỡng khai thác công cụ AI. Minh chứng: Kế hoạch tập huấn 'Ứng dụng AI trong quản lý và giảng dạy'.", sugg2: "Đánh giá, lựa chọn AI chuyên biệt cho giáo dục. Minh chứng: Danh mục các công cụ AI được cấp phép sử dụng trong trường; Báo cáo phân tích dữ liệu bằng AI.", sugg3: "Chiến lược phát triển môi trường trợ lý ảo (Virtual Assistant). Minh chứng: Dự án xây dựng Chatbot hỗ trợ tuyển sinh/quản lý học sinh; Văn hóa đổi mới dựa trên AI." }
+                ]
+            },
+            {
+                name: "5. PHÁT TRIỂN CHUYÊN MÔN",
+                items: [
+                    { id: "5.1", name: "Cập nhật kiến thức, đổi mới quản lý", desc1: "Nhận thức đổi mới; Áp dụng phương pháp quản lý, dạy học mới.", desc2: "Tổ chức lớp bồi dưỡng cho đồng nghiệp; Tích hợp tiến bộ khoa học.", desc3: "Dẫn dắt nghiên cứu áp dụng công nghệ tiên tiến; Kết nối mạng lưới chuyên gia.", sugg1: "Áp dụng phương pháp quản lý mới vào thực tiễn. Minh chứng: Hồ sơ quản lý số (sổ tay điện tử); Chứng chỉ các khóa bồi dưỡng quản lý hiện đại.", sugg2: "Tổ chức các lớp chia sẻ kinh nghiệm cho đồng nghiệp. Minh chứng: Nhật ký làm báo cáo viên tại các buổi sinh hoạt chuyên môn về quản lý số.", sugg3: "Dẫn dắt nghiên cứu và áp dụng công nghệ tiên tiến. Minh chứng: Đề tài nghiên cứu khoa học cấp cơ sở/tỉnh về quản lý giáo dục số." },
+                    { id: "5.2", name: "Mạng lưới học tập chuyên môn trực tuyến", desc1: "Chủ động tham gia cộng đồng chuyên môn trao đổi kinh nghiệm.", desc2: "Đóng góp tích cực; Chia sẻ tài liệu mở rộng kết nối giáo dục.", desc3: "Dẫn dắt điều phối mạng lưới quy mô lớn; Kết nối chuyên gia trong/ngoài nước.", sugg1: "Chủ động tham gia các cộng đồng chuyên môn. Minh chứng: Link hồ sơ cá nhân trên các mạng lưới giáo dục (LinkedIn, Microsoft Educator Community).", sugg2: "Chia sẻ tài liệu, kinh nghiệm nâng cao năng lực cộng đồng. Minh chứng: Các bài viết chia sẻ, tài liệu đóng góp trên các diễn đàn CBQL giáo dục.", sugg3: "Dẫn dắt, điều phối mạng lưới học tập quy mô lớn. Minh chứng: Quyết định/Minh chứng là Admin/Người điều phối các cộng đồng chuyên môn trực tuyến lớn." },
+                    { id: "5.3", name: "Hợp tác xây dựng chiến lược phát triển", desc1: "Tìm kiếm, thiết lập quan hệ, ký kết hợp tác cá nhân/tổ chức.", desc2: "Duy trì quan hệ bền vững; Đánh giá rút kinh nghiệm hiệu quả.", desc3: "Chủ trì đàm phán hợp tác chiến lược; Huy động tối đa nguồn lực đối tác.", sugg1: "Tìm kiếm mối quan hệ ký kết hợp tác trao đổi. Minh chứng: Biên bản làm việc với các đơn vị đối tác ban đầu.", sugg2: "Duy trì mối quan hệ bền vững, đánh giá hiệu quả hợp tác. Minh chứng: Báo cáo đánh giá hiệu quả các chương trình hợp tác hàng năm.", sugg3: "Lãnh đạo chương trình hợp tác chiến lược tạo ảnh hưởng. Minh chứng: Hợp đồng hợp tác chiến lược mang lại nguồn lực lớn cho trường; Báo cáo ảnh hưởng xã hội." },
+                    { id: "5.4", name: "Tham gia hoạt động xã hội", desc1: "Khai thác công cụ số tham gia hoạt động xã hội nâng cao nhận thức.", desc2: "Tổ chức nhóm trực tuyến phục vụ cộng đồng linh hoạt hiệu quả.", desc3: "Dẫn dắt nền tảng quy mô lớn; Sáng tạo giải pháp trực tuyến hỗ trợ cộng đồng.", sugg1: "Khai thác công cụ số tham gia hoạt động xã hội. Minh chứng: Nhật ký tham gia các chiến dịch thiện nguyện/cộng đồng trực tuyến.", sugg2: "Tổ chức nhóm trực tuyến phục vụ lợi ích cộng đồng. Minh chứng: Quyết định thành lập/Link quản trị nhóm thiện nguyện số của nhà trường.", sugg3: "Sáng tạo giải pháp trực tuyến hỗ trợ cộng đồng. Minh chứng: Giải thưởng/Ghi nhận về sáng kiến công nghệ vì cộng đồng; Mô hình ứng dụng công nghệ xã hội." },
+                    { id: "5.5", name: "Dẫn dắt thay đổi, tư duy cải tiến", desc1: "Áp dụng kỹ năng số hình thành tư duy cải tiến; Đề xuất giải pháp.", desc2: "Hướng dẫn đồng nghiệp thích ứng; Tổ chức bồi dưỡng chuyển đổi số.", desc3: "Dẫn dắt chiến lược; Quản trị quá trình thay đổi phức tạp xây dựng văn hóa.", sugg1: "Áp dụng kỹ năng số hình thành tư duy cải tiến. Minh chứng: Báo cáo đề xuất cải tiến quy trình hành chính bằng CNTT.", sugg2: "Tổ chức bồi dưỡng chuyển đổi số hàng năm cho đội ngũ. Minh chứng: Kế hoạch bồi dưỡng chuyển đổi số giai đoạn 2026-2030 của trường.", sugg3: "Quản trị hiệu quả quá trình thay đổi phức tạp. Minh chứng: Văn bản chính sách xây dựng văn hóa số; Báo cáo thay đổi chỉ số chuyển đổi số của đơn vị." }
+                ]
+            }
+        ];
+
+        // --- Khởi tạo Vue Application ---
+        const { createApp, ref, reactive, computed, onMounted, onUnmounted } = Vue;
+
+        createApp({
+            setup() {
+                const role = ref('GV');
+                
+                // Dữ liệu người dùng
+                const userInfo = reactive({
+                    name: '',
+                    school: '',
+                    year: '',
+                    department: '',
+                    position: '',
+                    evaluator: '',
+                    date: new Date().toISOString().split('T')[0]
+                });
+
+                // Dữ liệu phần đánh giá chung
+                const evaluation = reactive({
+                    comments: '',
+                    suggestions: '',
+                    development: '',
+                    training: ''
+                });
+
+                // Deep clone data to add reactivity properties (score, evidence)
+                const addReactiveProps = (dataObj) => {
+                    return JSON.parse(JSON.stringify(dataObj)).map(domain => {
+                        domain.items = domain.items.map(item => ({ ...item, score: null, evidence: '' }));
+                        return domain;
+                    });
+                };
+
+                const state = reactive({
+                    gv: addReactiveProps(gvData),
+                    cbql: addReactiveProps(cbqlData)
+                });
+
+                const currentCriteria = computed(() => {
+                    return role.value === 'GV' ? state.gv : state.cbql;
+                });
+
+                // --- Logic tính toán ---
+                const totalItems = computed(() => {
+                    return currentCriteria.value.reduce((total, domain) => total + domain.items.length, 0);
+                });
+
+                const maxScore = computed(() => {
+                    return totalItems.value * 3;
+                });
+
+                const stats = computed(() => {
+                    let total = 0;
+                    let completed = 0;
+                    currentCriteria.value.forEach(domain => {
+                        domain.items.forEach(item => {
+                            if (item.score) {
+                                total += item.score;
+                                completed++;
+                            }
+                        });
+                    });
+                    return { total, completed };
+                });
+
+                const totalScore = computed(() => stats.value.total);
+                const completedItems = computed(() => stats.value.completed);
+
+                // Tính toán tỷ lệ % luôn chính xác dù là GV (20 tiêu chí = max 60đ) hay CBQL (24 tiêu chí = max 72đ)
+                const percentage = computed(() => {
+                    if (maxScore.value === 0) return 0;
+                    return Math.round((totalScore.value / maxScore.value) * 100);
+                });
+
+                // Sử dụng chuẩn Tỷ lệ % của Thông tư để xếp loại (Không bị ảnh hưởng bởi số lượng câu)
+                const classification = computed(() => {
+                    const p = percentage.value;
+                    if (p === 0) return { label: 'Chưa đánh giá', textColor: 'text-slate-400', barColor: 'bg-slate-300' };
+                    if (p >= 90) return { label: 'Xuất sắc', textColor: 'text-green-600', barColor: 'bg-green-500' };
+                    if (p >= 75) return { label: 'Giỏi', textColor: 'text-blue-600', barColor: 'bg-blue-500' };
+                    if (p >= 50) return { label: 'Khá', textColor: 'text-yellow-500', barColor: 'bg-yellow-400' };
+                    if (p >= 33) return { label: 'Trung bình', textColor: 'text-orange-500', barColor: 'bg-orange-400' };
+                    return { label: 'Chưa đạt', textColor: 'text-red-600', barColor: 'bg-red-500' };
+                });
+
+                // --- Hành động ---
+                const setRole = (newRole) => {
+                    if (role.value !== newRole) {
+                        if (confirm(`Bạn muốn chuyển sang đánh giá cho ${newRole === 'GV' ? 'Giáo viên' : 'CBQL'}? Dữ liệu hiện tại sẽ được lưu lại tự động.`)) {
+                            role.value = newRole;
+                        }
+                    }
+                };
+
+                const selectScore = (item, score) => {
+                    item.score = score;
+                    saveToLocal();
+                };
+
+                const resetForm = () => {
+                    if (confirm('Bạn có chắc chắn muốn xóa toàn bộ kết quả đánh giá của vai trò này không?')) {
+                        state[role.value.toLowerCase()] = addReactiveProps(role.value === 'GV' ? gvData : cbqlData);
+                        evaluation.comments = '';
+                        evaluation.suggestions = '';
+                        evaluation.development = '';
+                        evaluation.training = '';
+                        saveToLocal();
+                    }
+                };
+
+                const printReport = () => {
+                    window.print();
+                };
+
+                // Auto-save logic
+                const saveToLocal = () => {
+                    const dataToSave = {
+                        role: role.value,
+                        userInfo,
+                        evaluation,
+                        gv: state.gv,
+                        cbql: state.cbql
+                    };
+                    localStorage.setItem('eduDigitalRubricData', JSON.stringify(dataToSave));
+                };
+
+                // Scroll interaction for sticky footer
+                const isScrollingDown = ref(false);
+                let lastScrollPosition = 0;
+
+                const handleScroll = () => {
+                    const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+                    if (currentScroll > lastScrollPosition && currentScroll > 100) {
+                        isScrollingDown.value = true;
+                    } else {
+                        isScrollingDown.value = false;
+                    }
+                    lastScrollPosition = currentScroll <= 0 ? 0 : currentScroll;
+                };
+
+                onMounted(() => {
+                    const savedData = localStorage.getItem('eduDigitalRubricData');
+                    if (savedData) {
+                        try {
+                            const parsed = JSON.parse(savedData);
+                            role.value = parsed.role || 'GV';
+                            if (parsed.userInfo) Object.assign(userInfo, parsed.userInfo);
+                            if (parsed.evaluation) Object.assign(evaluation, parsed.evaluation);
+                            if (parsed.gv) state.gv = parsed.gv;
+                            if (parsed.cbql) state.cbql = parsed.cbql;
+                        } catch (e) {
+                            console.error("Could not load saved data", e);
+                        }
+                    }
+                    window.addEventListener('scroll', handleScroll, { passive: true });
+                });
+
+                onUnmounted(() => {
+                    window.removeEventListener('scroll', handleScroll);
+                });
+
+                // Watchers to auto-save evidence and evaluations
+                Vue.watch(() => state.gv, saveToLocal, { deep: true });
+                Vue.watch(() => state.cbql, saveToLocal, { deep: true });
+                Vue.watch(userInfo, saveToLocal, { deep: true });
+                Vue.watch(evaluation, saveToLocal, { deep: true });
+
+                return {
+                    role,
+                    userInfo,
+                    evaluation,
+                    currentCriteria,
+                    totalScore,
+                    maxScore,
+                    percentage,
+                    completedItems,
+                    totalItems,
+                    classification,
+                    isScrollingDown,
+                    setRole,
+                    selectScore,
+                    resetForm,
+                    printReport
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>
