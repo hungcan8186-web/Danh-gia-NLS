@@ -1,0 +1,11 @@
+{
+  "name": "danh-gia-nls",
+  "version": "1.0.0",
+  "description": "EduDigital Rubric Pro - Danh gia Nang luc so",
+  "dependencies": {
+    "googleapis": "^140.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
