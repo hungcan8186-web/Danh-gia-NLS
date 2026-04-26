@@ -639,7 +639,10 @@ window.cbqlData = [
                             else alert("Lỗi lưu nháp: " + res.error);
                         }).saveDraftData(buildPayload());
                     } else {
-                        setTimeout(() => { isProcessing.value = false; alert("Đã lưu nháp (Mô phỏng)"); }, 800);
+                                    // Vercel mode: save to localStorage
+                                            const p = buildPayload();
+                                            localStorage.setItem('draftData_' + userInfo.email, JSON.stringify({role: p.role, data: p.draftData, school: p.school}));
+                                            setTimeout(() => { isProcessing.value = false; alert("Da luu ban nhap vao bo nho cuc bo!"); }, 400);
                     }
                 };
 
