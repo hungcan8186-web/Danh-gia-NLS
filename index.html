@@ -660,6 +660,20 @@ window.cbqlData = [
                                 }
                             }
                         }).loadDraftData(userInfo.email);
+                    } else {
+                                        // Vercel/offline mode: load from localStorage
+                                        const savedKey = 'draftData_' + userInfo.email;
+                                        const saved = localStorage.getItem(savedKey);
+                                        if (saved) {
+                                                                try {
+                                                                                            const parsed = JSON.parse(saved);
+                                                                                            if (parsed.role && state[parsed.role]) {
+                                                                                                                            state[parsed.role] = parsed.data;
+                                                                                                                            currentTab.value = parsed.role;
+                                                                                                }
+                                                                                            if (parsed.school) userInfo.school = parsed.school;
+                                                                } catch(e) { console.error('Load draft error', e); }
+                                        }
                     }
                 };
 
@@ -735,7 +749,7 @@ window.cbqlData = [
                     totalScore, maxScore, percentage, completedItems, totalItems, classification, isProcessing,
                     validationErrors, validationErrorsEvidence,
                     openArea, doLogin, logout, selectScore, clearEvidenceError, saveDraft, submitFinal, loadDashboard
-                };
+                };h
             }
         }).mount('#app');
     </script>
